@@ -1,9 +1,23 @@
 import React from 'react';
 import { Segment, Grid, Icon, Button } from 'semantic-ui-react';
+import EventDetailedMap from "./EventDetailedMap";
 
-const EventDetailedInfo = ({event}) => {
-  return (
-    <Segment.Group>
+class EventDetailedInfo extends React.Component{
+
+  state = {
+    showMap: false
+  }
+
+  showMapToggle = () => {
+    this.setState(prevState => ({
+      showMap: !prevState.showMap
+    }))
+  }
+
+  render() {
+    const {event} = this.props;
+    return(
+      <Segment.Group>
       <Segment attached="top">
         <Grid>
           <Grid.Column width={1}>
@@ -37,8 +51,14 @@ const EventDetailedInfo = ({event}) => {
           </Grid.Column>
         </Grid>
       </Segment>
+      {this.state.showMap &&
+      <EventDetailedMap lat={event.venueLatLng.lat} lng={event.venueLatLng.lng} />
+    }
     </Segment.Group>
-  );
-};
+
+    );
+  }
+}
+
 
 export default EventDetailedInfo;

@@ -73,7 +73,7 @@ class TestComponent extends Component {
         <button type="submit">Submit</button>
       </form>
 
-      <div style={{ height: '100vh', width: '100%' }}>
+      <div style={{ height: '300px', width: '100%' }}>
         <GoogleMapReact
           bootstrapURLKeys={{ key: "AIzaSyDJW1DNdJfsoveoCLjJaLbHSDxVoxV0p8c" }}
           defaultCenter={this.props.center}
