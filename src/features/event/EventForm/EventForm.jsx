@@ -1,5 +1,8 @@
+/* global google*/
 import React, { Component } from 'react';
-import { connect } from 'react-redux'
+import { connect } from 'react-redux';
+import Script from "react-load-script";
+import {geocodeByAddress, getLatLng} from "react-places-autocomplete";
 import { reduxForm, Field } from "redux-form";
 import {composeValidators, isRequired, combineValidators, hasLengthGreaterThan} from "revalidate";
 import cuid from 'cuid';
@@ -10,6 +13,7 @@ import TextInput from "../../../app/common/form/TextInput";
 import TextArea from '../../../app/common/form/TextArea';
 import SelectInput from "../../../app/common/form/SelectInput";
 import DateInput from "../../../app/common/form/DateInput";
+import PlaceInput from "../../../app/common/form/PlaceInput";
 
 const mapState = (state, ownProps) => {
   const eventId = ownProps.match.params.id;
@@ -53,8 +57,40 @@ const validate = combineValidators({
 
 class EventForm extends Component {
 
+  state={
+    cityLatLng: {},
+    venueLatLng: {},
+    scriptLoaded: false
+  }
+
+  handleCitySelect = (selectedCity) => {
+    geocodeByAddress(selectedCity)
+    .then(results=> getLatLng(results[0]))
+    .then(latLng=> this.setState({
+      cityLatLng: latLng
+    }))
+    .then(()=> {
+      this.props.change("city", selectedCity)
+    })
+  };
+  handleVenueSelect = (selectedVenue) => {
+    geocodeByAddress(selectedVenue)
+    .then(results=> getLatLng(results[0]))
+    .then(latLng=> this.setState({
+      venueLatLng: latLng
+    }))
+    .then(()=> {
+      this.props.change("venue", selectedVenue)
+    })
+  };
+  
+  handleScriptLoad = () => this.setState({
+    scriptLoaded: true
+  }) ;
+
   onFormSubmit = (values) => {
       values.date = moment(values.date).format();
+      values.venueLatLng = this.state.venueLatLng;
     if (this.props.initialValues.id) {
       this.props.updateEvent(values);
       this.props.history.goBack();
@@ -65,7 +101,7 @@ class EventForm extends Component {
         hostPhotoURL: '/assets/user.png',
         hostedBy: "Bob"
       }
-      this.props.createEvent(newEvent)
+      this.props.createEvent(newEvent)   
       this.props.history.push('/events')
     } 
 
@@ -75,6 +111,11 @@ class EventForm extends Component {
     const {submitting, pristine, invalid} = this.props;
     return (
       <Grid.Column width= "10" >
+         <Script 
+        url="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJW1DNdJfsoveoCLjJaLbHSDxVoxV0p8c&libraries=places"
+        onLoad={this.handleScriptLoad}
+        />
+
       <Segment>
             <Form onSubmit={this.props.handleSubmit(this.onFormSubmit)}>
               <Header sub color = "teal" content="Event Details" />         
@@ -98,16 +139,27 @@ class EventForm extends Component {
               <Header sub color="teal"
               content="Event Location Details"
               />
+
+              
               <Field name="city"
               type="text"
-              component={TextInput}
+              component={PlaceInput}
+              options={{types: ["(cities)"]}}
+              onSelect={this.handleCitySelect}
               placeholder="City Name"
               />
+              {this.state.scriptLoaded && 
               <Field name="venue"
               type="text"
-              component={TextInput}
+              options={{
+                location: new google.maps.LatLng(this.state.cityLatLng),
+                radius: 1000,
+                types: ["establishment"]}}
+              component={PlaceInput}
+              onSelect={this.handleVenueSelect}
               placeholder="Venue Details"
               />
+            }
               <Field name="date"
               type="text"
               component={DateInput}
